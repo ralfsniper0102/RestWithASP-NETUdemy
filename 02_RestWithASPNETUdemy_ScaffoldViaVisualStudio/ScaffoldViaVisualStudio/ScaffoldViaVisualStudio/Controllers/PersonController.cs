@@ -5,115 +5,70 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Globalization;
+using ScaffoldViaVisualStudio.Controllers.Model.Services.Implementations;
+using ScaffoldViaVisualStudio.Controllers.Model;
 
 namespace ScaffoldViaVisualStudio.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class PersonController : ControllerBase
     {
 
 
         private readonly ILogger<PersonController> _logger;
+        private IPersonService _personService;
 
-        public PersonController(ILogger<PersonController> logger)
+        public PersonController(ILogger<PersonController> logger, IPersonService personService)
         {
             _logger = logger;
+            _personService = personService;
         }
 
-        [HttpGet("sum/{firstNumber}/{secondNumber}")]
-        public IActionResult Sum(string firstNumber, string secondNumber)
+        [HttpGet]
+        public IActionResult Get()
         {
-            if (IsNumeric(secondNumber) && IsNumeric(firstNumber))
+            return Ok(_personService.FindAll());
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult Get(long id)
+        {
+            var person = _personService.FindByID(id);
+            if (person == null)
             {
-                var sum = ConvertToDecimal(firstNumber) + ConvertToDecimal(secondNumber);
-                return Ok(sum.ToString());
+                return NotFound();
             }
-            return BadRequest("Invalid Input");
+            return Ok(person);
         }
 
-        [HttpGet("sub/{firstNumber}/{secondNumber}")]
-        public IActionResult Sub(string firstNumber, string secondNumber)
+        [HttpPost]
+        public IActionResult Post([FromBody] Person person)
         {
-            if (IsNumeric(secondNumber) && IsNumeric(firstNumber))
+            if (person == null)
             {
-                var sub = (ConvertToDecimal(firstNumber)) - (ConvertToDecimal(secondNumber));
-                return Ok(sub.ToString());
+                return BadRequest();
             }
-            return BadRequest("Invalid Input");
+            return Ok(_personService.Create(person));
         }
 
-        [HttpGet("div/{firstNumber}/{secondNumber}")]
-        public IActionResult Division(string firstNumber, string secondNumber)
+        [HttpPut]
+        public IActionResult Put([FromBody] Person person)
         {
-            if (IsNumeric(secondNumber) && IsNumeric(firstNumber))
+            if (person == null)
             {
-                var div = ConvertToDecimal(firstNumber) / ConvertToDecimal(secondNumber);
-                return Ok(div.ToString());
+                return BadRequest();
             }
-            return BadRequest("Invalid Input");
+            return Ok(_personService.Update(person));
         }
 
-
-        [HttpGet("avg/{firstNumber}/{secondNumber}")]
-        public IActionResult Averag(string firstNumber, string secondNumber)
+        [HttpDelete("{id}")]
+        public IActionResult Delete(long id)
         {
-            if (IsNumeric(secondNumber) && IsNumeric(firstNumber))
-            {
-                var avg = ((ConvertToDecimal(firstNumber) + ConvertToDecimal(secondNumber)) / 2);
-                return Ok(avg.ToString());
-            }
-            return BadRequest("Invalid Input");
+            _personService.Delete(id);
+        
+            return NoContent();
         }
 
-
-        [HttpGet("mult/{firstNumber}/{secondNumber}")]
-        public IActionResult Multiplication(string firstNumber, string secondNumber)
-        {
-            if (IsNumeric(secondNumber) && IsNumeric(firstNumber))
-            {
-                var avg = (ConvertToDecimal(firstNumber) * ConvertToDecimal(secondNumber));
-                return Ok(avg.ToString());
-            }
-            return BadRequest("Invalid Input");
-        }
-
-        [HttpGet("sqrt/{firstNumber}")]
-        public IActionResult SquareRoot(string firstNumber)
-        {
-            if (IsNumeric(firstNumber))
-            {
-                var sqrt = Math.Sqrt((double)ConvertToDecimal(firstNumber));
-                return Ok(sqrt.ToString());
-            }
-            return BadRequest("Invalid Input");
-        }
-
-        private decimal ConvertToDecimal(string strNumber)
-        {
-            decimal decimalValue;
-
-            if (decimal.TryParse(strNumber,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.NumberFormatInfo.InvariantInfo,
-                 out decimalValue))
-            {
-                return decimalValue;
-            }
-
-
-            return 0;
-        }
-
-        private bool IsNumeric(string strNumber)
-        {
-            double number;
-            bool isNumber = double.TryParse(
-                strNumber,
-                System.Globalization.NumberStyles.Any,
-                System.Globalization.NumberFormatInfo.InvariantInfo,
-                out number);
-            return isNumber;
-        }
     }
 }
